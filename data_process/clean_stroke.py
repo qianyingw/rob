@@ -33,6 +33,7 @@ stroke.set_index(pd.Series(range(0, len(stroke))), inplace=True)
 
 #%% Output data
 stroke.to_csv('rob_stroke_fulltext.txt', sep='\t', encoding='utf-8')
+stroke.to_json('rob_stroke_fulltext.json')
 
 
 #%% Run regex
