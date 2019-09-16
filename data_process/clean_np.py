@@ -2,10 +2,10 @@
 """
 Created on Mon Jul 29 09:51:23 2019
 
-@author: s1515896
+@author: qwang
 """
 
-
+import time
 import os
 from io import StringIO
 import re
@@ -16,58 +16,109 @@ import numpy as np
 import pandas as pd
 import os
 
-# change to code dir
-dir = 'U:/Datastore/CMVM/scs/groups/DCN/TRIALDEV/CAMARADES/Qianying/RoB/codes/data_process'
-os.chdir(dir)
-from pdf2text import convert_multiple
-from regex import doc_annotate, read_regex
+# change working directory
+wdir = 'U:/Datastore/CMVM/scs/groups/DCN/TRIALDEV/CAMARADES/Qianying/RoB/'
+os.chdir(wdir)
 
-# change to data dir
-dir = 'U:/Datastore/CMVM/scs/groups/DCN/TRIALDEV/CAMARADES/Qianying/RoB/data/np/'
-os.chdir(dir)
+from codes.data_process.pdf2text import *
+# from pdf2text import convert_multiple
+# from regex import doc_annotate, read_regex
+
 
 #%% Read and format data
-np = pd.read_csv("NP_UniqueRecord_ROB.txt", sep='\t', engine="python", encoding="utf-8")
+nep = pd.read_csv("data/np/NP_UniqueRecord_ROB.txt", sep='\t', engine="python", encoding="utf-8")
+list(nep.columns)
+nep['ID'] = np.arange(1, len(nep)+1)
 
+#%% Remove or replace records
 # Replace url/htm/docx link by pdf path
-np.loc[np.DocumentLink=='http:/europepmc.org/backend/ptpmcrender.fcgi?accid=PMC4251814&blobtype=pdf', 'DocumentLink'] = 'np_fromURL/PubID_400226.pdf'
-np.loc[np.DocumentLink=='http:/www.degruyter.com/downloadpdf/j/tnsci.2015.6.issue-1/tnsci-2015-0010/tnsci-2015-0010.xml', 'DocumentLink'] = 'np_fromURL/PubID_417813.pdf'
-np.loc[np.DocumentLink=='http:/www.rehab.research.va.gov/jour/09/46/1/Tan.html', 'DocumentLink'] = 'np_fromURL/PubID_24208.pdf'
-np.loc[np.DocumentLink=='https:/www.bioscience.org/2012/v4e/af/588/fulltext.php?bframe=PDFII', 'DocumentLink'] = 'np_fromURL/PubID_4352.pdf'
-np.loc[np.DocumentLink=='https:/www.jstage.jst.go.jp/article/jphs/124/4/124_13249SC/_pdf', 'DocumentLink'] = 'np_fromURL/PubID_420986.pdf'
-np.loc[np.DocumentLink=='https:/www.researchgate.net/publication/261841186_Anti-Allodynic_and_Anti-hyperalgesic_effects_of_an_ethanolic_extract_and_xylopic_acid_from_the_fruits_of_Xylopia_aethiopica_in_murine_models_of_neuropathic_painAmeya', 'DocumentLink'] = 'np_fromURL/PubID_400489.pdf'
-np.loc[np.DocumentLink=='https:/www.researchgate.net/publication/260807926_Effect_of_Xylopic_Acid_on_Paclitaxel-induced_Neuropathic_pain_in_rats', 'DocumentLink'] = 'np_fromURL/PubID_400487.pdf'
-np.loc[np.DocumentLink=='Publications/NP_references/39627_Lynch_2003.docx', 'DocumentLink'] = 'np_fromURL/39627_Lynch_2003.pdf'
-np.loc[np.DocumentLink=='Publications/NP_references/4368_Palazzo.htm', 'DocumentLink'] = 'np_fromURL/4368_Palazzo.pdf'
+nep.loc[nep.DocumentLink=='http:/europepmc.org/backend/ptpmcrender.fcgi?accid=PMC4251814&blobtype=pdf', 'DocumentLink'] = 'np_fromURL/PubID_400226.pdf'
+nep.loc[nep.DocumentLink=='http:/www.degruyter.com/downloadpdf/j/tnsci.2015.6.issue-1/tnsci-2015-0010/tnsci-2015-0010.xml', 'DocumentLink'] = 'np_fromURL/PubID_417813.pdf'
+nep.loc[nep.DocumentLink=='http:/www.rehab.research.va.gov/jour/09/46/1/Tan.html', 'DocumentLink'] = 'np_fromURL/PubID_24208.pdf'
+nep.loc[nep.DocumentLink=='https:/www.bioscience.org/2012/v4e/af/588/fulltext.php?bframe=PDFII', 'DocumentLink'] = 'np_fromURL/PubID_4352.pdf'
+nep.loc[nep.DocumentLink=='https:/www.jstage.jst.go.jp/article/jphs/124/4/124_13249SC/_pdf', 'DocumentLink'] = 'np_fromURL/PubID_420986.pdf'
+nep.loc[nep.DocumentLink=='https:/www.researchgate.net/publication/261841186_Anti-Allodynic_and_Anti-hyperalgesic_effects_of_an_ethanolic_extract_and_xylopic_acid_from_the_fruits_of_Xylopia_aethiopica_in_murine_models_of_neuropathic_painAmeya', 'DocumentLink'] = 'np_fromURL/PubID_400489.pdf'
+nep.loc[nep.DocumentLink=='https:/www.researchgate.net/publication/260807926_Effect_of_Xylopic_Acid_on_Paclitaxel-induced_Neuropathic_pain_in_rats', 'DocumentLink'] = 'np_fromURL/PubID_400487.pdf'
+nep.loc[nep.DocumentLink=='Publications/NP_references/39627_Lynch_2003.docx', 'DocumentLink'] = 'np_fromURL/39627_Lynch_2003.pdf'
+nep.loc[nep.DocumentLink=='Publications/NP_references/4368_Palazzo.htm', 'DocumentLink'] = 'np_fromURL/4368_Palazzo.pdf'
+# File is old and was replaced by an updated version
+nep.loc[nep.DocumentLink=='Publications/NP_references/21016_Chu_2012.pdf', 'DocumentLink'] = 'Publications/NP_references/21016_Chu_2012_updated.pdf'
+# Font 'HelveticaNeue-Roman' in abstract can't be read by pdfminer.six and was replaced by txt file
+nep.loc[nep.DocumentLink=='Publications/NP_references/4151_Whiteside_2001.pdf', 'DocumentLink'] = 'Publications/NP_references/4151_Whiteside_2001.txt'
 
-np['Id'] = np['PublicationID']
 
-# Modify paths
-np['DocumentLink'] = 'U:/Datastore/CMVM/scs/groups/DCN/TRIALDEV/CAMARADES/Qianying/RoB/data/np/npPublications/' + np['DocumentLink'].astype(str)
+# Remove records from 'Mental Illness'
+mental_list = []
+for i, df in nep.iterrows():
+    if df['DocumentLink'].split('/')[0] == 'Mental Illness':
+        mental_list.append(df['ID'])
+nep = nep[-nep["ID"].isin(mental_list)]
 
+
+# Remove '25548_Detloff_2009.pdf' (a thesis with 187 pages)  
+nep = nep[-nep["DocumentLink"].isin(['Publications/NP_references/25548_Detloff_2009.pdf'])]
+
+
+#%% Re-index
+nep['ID'] = np.arange(1, len(nep)+1)
+
+
+#%% Modify paths
+pdf_folder = 'U:/Datastore/CMVM/scs/groups/DCN/TRIALDEV/CAMARADES/Qianying/RoB/data/np/npPublications/'
+nep['fileLink'] = pdf_folder + nep['DocumentLink'].astype(str)
+
+#len(set(nep['PublicationID']))
 
 
 #%% Convert pdf to text
-path_df = pd.DataFrame(data={'Id': np['Id'], 'pdf_path': np['DocumentLink']})
-df = convert_multiple(path_df[0:10])
+path_df = pd.DataFrame(data={'ID': nep['ID'], 'pdf_path': nep['fileLink']})
+
+start = time.time()
+df = convert_multiple(path_df, out_path = wdir+'/data/np/npTexts/')
+end = time.time()
+print('Time elapsed: {} mins.'.format((end-start)/60))
 
 
-#%% Merge 'NP_UniqueRecord_ROB.txt' and with fulltext by Id
 
-# Remove duplicates and 2333 left (needs to be checked by Jing; shouldn't have any duplicate records)
-left = dat.copy()
+left = nep.copy()
 right = df.copy()
-left = left.drop_duplicates(subset='DocumentLink', keep='first')
-right = right.drop_duplicates(subset='DocumentLink', keep='first')
-np_final = pd.merge(left, right, how='inner', on='DocumentLink', validate="one_to_one")
+left = left.drop_duplicates(subset='ID', keep='first')
+right = right.drop_duplicates(subset='ID', keep='first')
+NP = pd.merge(left, right, how='inner', on='ID', validate="one_to_one")
 
 # Remove records without full-text and 2314 left
 #np_final['Text'].replace('', np.nan, inplace=True)
 #np_final.dropna(subset=['Text'], inplace=True)
 
 
+#%% Check duplicates
+NP['textLen'] = NP['Text'].apply(lambda x: len(x))
+# Remove records with unique length
+NP_dup = NP[NP.duplicated(subset=['textLen'], keep=False)]
+NP_dup['textSame'] = ''
+# Check whether records with same text length are duplicate
+dup_grouped = NP_dup.groupby(['textLen'])
+dup_grouped = list(dup_grouped)
+
+len(dup_grouped)  # ?
+duplen = []  
+for i in range(len(dup_grouped)):
+    duplen.append(len(dup_grouped[i][1]))
+set(duplen)  # {?}
+
+
+
+np_dup = nep[nep.duplicated(subset=['PublicationID'], keep=False)]
+ID = 350, 1734
+
+
+
 #%% Output data
 np_final.to_csv('rob_np_fulltext.txt', sep='\t', encoding='utf-8')
+
+
+
+
 
 
 
