@@ -30,11 +30,6 @@ import PyPDF2
 #%% Convert single pdf
 def convert_pdf_to_txt(path_to_file):
     
-    # Read txt file directly
-    if path_to_file.lower().endswith('.txt'):
-        with open(path_to_file, 'r') as fp:
-            text = fp.read()
-
     rsrcmgr = PDFResourceManager()
     retstr = StringIO()
     codec = 'utf-8'
@@ -48,17 +43,21 @@ def convert_pdf_to_txt(path_to_file):
     
     if os.path.exists(path_to_file):
         fp = open(path_to_file, 'rb')   
-        reader = PyPDF2.PdfFileReader(fp)
-        if reader.isEncrypted == True:
-            pdf = pikepdf.open(path_to_file)
-            new_path = path_to_file.split('.pdf')[0]+'_extractable.pdf'
-            pdf.save(new_path)
-            fp = open(new_path, 'rb')  
+        try:
+            reader = PyPDF2.PdfFileReader(fp)
+            if reader.isEncrypted == True:
+                pdf = pikepdf.open(path_to_file)
+                new_path = path_to_file.split('.pdf')[0]+'_extractable.pdf'
+                pdf.save(new_path)
+                fp = open(new_path, 'rb')  
+        except:
+            # Skip 'PdfReadError: EOF marker not found'. It's a bug hasn't been fixed by PyPDF2. 
+            print("Skip encryption check.")
                                   
         try:   
             for page in PDFPage.get_pages(fp, pagenos, maxpages=maxpages, password=password, caching=caching, check_extractable=True):
                 interpreter.process_page(page)  
-            text = retstr.getvalue()                              
+            text = retstr.getvalue()                          
         except:
             text = ''
             print('Cannot be converted: {}.'.format(path_to_file))
@@ -84,40 +83,36 @@ def convert_multiple(path_df, out_path):
     
     for i, row in path_df.iterrows():
         pdf_path = row['pdf_path']
-        if (not os.path.isdir(pdf_path)) and (os.path.splitext(pdf_path)[-1].lower() =='.pdf'):
-            pdfnum = pdfnum + 1   
-            
+        
+        # Read txt file directly
+        if pdf_path.lower().endswith('.txt'):
+            with open(pdf_path, 'r') as fp:
+                text = fp.read()
+             
+        if os.path.splitext(pdf_path)[-1].lower() =='.pdf':
+            pdfnum = pdfnum + 1              
             text = convert_pdf_to_txt(pdf_path)
-            text = re.sub(r'\s+', ' ', text)
-            
-            out_filename = out_path + 'np_{}.txt'.format(row['ID'])
+            text = re.sub(r'\s+', ' ', text)            
+                                    
+        if len(text) < 1000:
+            text = ''
+        text_df = text_df.append({'ID': row['ID'], 'Text': text}, ignore_index=True)
+                      
+        if text != '':
+            cnum = cnum + 1
+            out_filename = out_path + 'psy_{}.txt'.format(row['ID'])
             with open(out_filename, 'w', encoding="utf-8") as fout:
-                fout.write(text)                
-#            print('Record {} is finished.'.format(i))
-            
-            text_df = text_df.append({'ID': row['ID'], 'Text': text}, ignore_index=True)
-            if text != '':
-                cnum = cnum + 1
-            else:
-                pdf_fail.append(row['ID'])
+                fout.write(text)  
+        else:
+            pdf_fail.append(row['ID'])
+        
+        print(row['ID'])
     
-#    for i in range(len(path_df)):
-#        pdf_path = path_df.loc[i,'pdf_path']
-#        if (not os.path.isdir(pdf_path)) and (os.path.splitext(pdf_path)[-1].lower() =='.pdf'):
-#            pdfnum = pdfnum + 1   
-#            text = convert_pdf_to_txt(pdf_path)
-#            text = re.sub(r'\s+', ' ', text)
-#            print('Record {} is finished.'.format(i))
-#            text_df = text_df.append({'ID': path_df.loc[i,'ID'], 'Text': text}, ignore_index=True)
-#            if text != '':
-#                cnum = cnum + 1
-#            else:
-#                pdf_fail.append()
     
-    print('\n{0} pdfs in total.'.format(pdfnum))            
-    print('{0} pdfs has been converted to texts.'.format(cnum))
+    print('\n{0} texts are not NULL.'.format(cnum))            
+    print('{0} pdfs has been converted to texts.'.format(pdfnum))
     if len(pdf_fail) != 0:
-        print('Failed IDs:\n')
+        print('IDs of files with text length less than 1000:\n')
         print(pdf_fail)
-    
+   
     return text_df
