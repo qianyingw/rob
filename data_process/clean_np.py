@@ -20,7 +20,7 @@ import os
 wdir = 'U:/Datastore/CMVM/scs/groups/DCN/TRIALDEV/CAMARADES/Qianying/RoB/'
 os.chdir(wdir)
 
-from codes.data_process.pdf2text import *
+from codes.data_process.pdf2text import convert_pdf_to_txt, convert_multiple
 # from pdf2text import convert_multiple
 # from regex import doc_annotate, read_regex
 
@@ -30,7 +30,7 @@ nep = pd.read_csv("data/np/NP_UniqueRecord_ROB.txt", sep='\t', engine="python", 
 list(nep.columns)
 nep['ID'] = np.arange(1, len(nep)+1)
 
-#%% Remove or replace records
+#%% Manual correction
 # Replace url/htm/docx link by pdf path
 nep.loc[nep.DocumentLink=='http:/europepmc.org/backend/ptpmcrender.fcgi?accid=PMC4251814&blobtype=pdf', 'DocumentLink'] = 'np_fromURL/PubID_400226.pdf'
 nep.loc[nep.DocumentLink=='http:/www.degruyter.com/downloadpdf/j/tnsci.2015.6.issue-1/tnsci-2015-0010/tnsci-2015-0010.xml', 'DocumentLink'] = 'np_fromURL/PubID_417813.pdf'
@@ -42,9 +42,55 @@ nep.loc[nep.DocumentLink=='https:/www.researchgate.net/publication/260807926_Eff
 nep.loc[nep.DocumentLink=='Publications/NP_references/39627_Lynch_2003.docx', 'DocumentLink'] = 'np_fromURL/39627_Lynch_2003.pdf'
 nep.loc[nep.DocumentLink=='Publications/NP_references/4368_Palazzo.htm', 'DocumentLink'] = 'np_fromURL/4368_Palazzo.pdf'
 # File is old and was replaced by an updated version
+nep.loc[nep.DocumentLink=="Publications/NP_references/25171_Fulgenzi_2008.pdf", 'DocumentLink'] = "Publications/NP_references/25171_Fulgenzi_2008_updated.pdf"
 nep.loc[nep.DocumentLink=='Publications/NP_references/21016_Chu_2012.pdf', 'DocumentLink'] = 'Publications/NP_references/21016_Chu_2012_updated.pdf'
 # Font 'HelveticaNeue-Roman' in abstract can't be read by pdfminer.six and was replaced by txt file
 nep.loc[nep.DocumentLink=='Publications/NP_references/4151_Whiteside_2001.pdf', 'DocumentLink'] = 'Publications/NP_references/4151_Whiteside_2001.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/23294_Yamamoto_1995.pdf', 'DocumentLink'] = 'Publications/NP_references/23294_Yamamoto_1995.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/5151_Yamamoto_1996.pdf', 'DocumentLink'] = 'Publications/NP_references/5151_Yamamoto_1996.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/7192_Yamamoto_1999.pdf', 'DocumentLink'] = 'Publications/NP_references/7192_Yamamoto_1999.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/9082_Morse_1997.pdf', 'DocumentLink'] = 'Publications/NP_references/9082_Morse_1997.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/20266_Bennett_1988.pdf', 'DocumentLink'] = 'Publications/NP_references/20266_Bennett_1988.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/1662_Lindner_2000.pdf', 'DocumentLink'] = 'Publications/NP_references/1662_Lindner_2000.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/10959_Mao_1995.pdf', 'DocumentLink'] = 'Publications/NP_references/10959_Mao_1995.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/1339_Marchand_1994.pdf', 'DocumentLink'] = 'Publications/NP_references/1339_Marchand_1994.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/Parks_2011.pdf', 'DocumentLink'] = 'Publications/NP_references/Parks_2011.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/4973_Alba-Delgado_2013.pdf', 'DocumentLink'] = 'Publications/NP_references/4973_Alba-Delgado_2013.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/10709_Hutchinson_2009.pdf', 'DocumentLink'] = 'Publications/NP_references/10709_Hutchinson_2009.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/16780_Xiao_2011.pdf', 'DocumentLink'] = 'Publications/NP_references/16780_Xiao_2011.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/4649_Xiao_2012.pdf', 'DocumentLink'] = 'Publications/NP_references/4649_Xiao_2012.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/22743_Zheng_2011.pdf', 'DocumentLink'] = 'Publications/NP_references/22743_Zheng_2011.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/24165_Cobianchi_2010.pdf', 'DocumentLink'] = 'Publications/NP_references/24165_Cobianchi_2010.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/24935_Ramos_2010.pdf', 'DocumentLink'] = 'Publications/NP_references/24935_Ramos_2010.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/20294_Austin_2010.pdf', 'DocumentLink'] = 'Publications/NP_references/20294_Austin_2010.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/8111_Mika_2011.pdf', 'DocumentLink'] = 'Publications/NP_references/8111_Mika_2011.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/322_Vivoli_2010.pdf', 'DocumentLink'] = 'Publications/NP_references/322_Vivoli_2010.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/16186_Cidral-Filho_2011.pdf', 'DocumentLink'] = 'Publications/NP_references/16186_Cidral-Filho_2011.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/22607_Gwak_2009.pdf', 'DocumentLink'] = 'Publications/NP_references/22607_Gwak_2009.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/24594_Brownjohn_2012.pdf', 'DocumentLink'] = 'Publications/NP_references/24594_Brownjohn_2012.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/14159_Okubo_2011.pdf', 'DocumentLink'] = 'Publications/NP_references/14159_Okubo_2011.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/23457_Kiya_2011.pdf', 'DocumentLink'] = 'Publications/NP_references/23457_Kiya_2011.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/408404_Kiya_2011.pdf', 'DocumentLink'] = 'Publications/NP_references/408404_Kiya_2011.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/18126_Mannelli_2010.pdf', 'DocumentLink'] = 'Publications/NP_references/18126_Mannelli_2010.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/3577_Marinelli_2010.pdf', 'DocumentLink'] = 'Publications/NP_references/3577_Marinelli_2010.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/6961_Ghelardini_2010.pdf', 'DocumentLink'] = 'Publications/NP_references/6961_Ghelardini_2010.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/21866_Chen_2011.pdf', 'DocumentLink'] = 'Publications/NP_references/21866_Chen_2011.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/4366_Miletic_2011.pdf', 'DocumentLink'] = 'Publications/NP_references/4366_Miletic_2011.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/15940_Hermanns_2009.pdf', 'DocumentLink'] = 'Publications/NP_references/15940_Hermanns_2009.txt'
+nep.loc[nep.DocumentLink=='Publications/NP_references/26552_Plaza-Villegas_2012.pdf', 'DocumentLink'] = 'Publications/NP_references/26552_Plaza-Villegas_2012.txt'
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # Remove records from 'Mental Illness'
@@ -58,9 +104,6 @@ nep = nep[-nep["ID"].isin(mental_list)]
 # Remove '25548_Detloff_2009.pdf' (a thesis with 187 pages)  
 nep = nep[-nep["DocumentLink"].isin(['Publications/NP_references/25548_Detloff_2009.pdf'])]
 
-
-#%% Re-index
-nep['ID'] = np.arange(1, len(nep)+1)
 
 
 #%% Modify paths
@@ -76,50 +119,164 @@ path_df = pd.DataFrame(data={'ID': nep['ID'], 'pdf_path': nep['fileLink']})
 start = time.time()
 df = convert_multiple(path_df, out_path = wdir+'/data/np/npTexts/')
 end = time.time()
-print('Time elapsed: {} mins.'.format((end-start)/60))
+print('Time elapsed: {} mins.'.format(round((end-start)/60)))
 
 
+#1697 texts are not NULL.
+#1733 pdfs has been converted to texts.
+#IDs of files with text length less than 1000:
+#[147, 299, 349, 561, 601, 685, 700, 716, 789, 857, 871, 885, 923, 1126, 1152, 1159, 1160, 1192, 1193, 1196, 1199, 1200, 1203, 1212, 1232, 1236, 1316, 1336, 1359, 1367, 1466, 1471, 1481, 1482, 1492, 1495, 1501, 1579, 1600, 1725]
+ID_inv1 = [147, 299, 349, 561, 601, 685, 700, 716, 789, 857, 871, 885, 923, 1126, 1152, 1159, 1160, 1192, 1193, 1196, 1199, 1200, 1203, 1212, 1232, 1236, 1316, 1336, 1359, 1367, 1466, 1471, 1481, 1482, 1492, 1495, 1501, 1579, 1600, 1725]
 
-left = nep.copy()
-right = df.copy()
-left = left.drop_duplicates(subset='ID', keep='first')
-right = right.drop_duplicates(subset='ID', keep='first')
-NP = pd.merge(left, right, how='inner', on='ID', validate="one_to_one")
-
-# Remove records without full-text and 2314 left
-#np_final['Text'].replace('', np.nan, inplace=True)
-#np_final.dropna(subset=['Text'], inplace=True)
-
+NP = nep
+NP = NP[-NP["ID"].isin(ID_inv1)]
+# Re-index
+NP.set_index(pd.Series(range(0, len(NP))), inplace=True)
 
 #%% Check duplicates
-NP['textLen'] = NP['Text'].apply(lambda x: len(x))
+for i, row in NP.iterrows():   
+    txt_path = 'data/np/npTexts/np_' + str(row['ID']) + '.txt'
+    with open(txt_path, 'r', encoding='utf-8') as fp:
+        text = fp.read()
+    NP.loc[i,'textLen'] = len(text)
+
+
 # Remove records with unique length
 NP_dup = NP[NP.duplicated(subset=['textLen'], keep=False)]
-NP_dup['textSame'] = ''
+NP_dup.loc[:,'textSame'] = ''
 # Check whether records with same text length are duplicate
 dup_grouped = NP_dup.groupby(['textLen'])
 dup_grouped = list(dup_grouped)
+len(dup_grouped)  # 65
 
-len(dup_grouped)  # ?
 duplen = []  
 for i in range(len(dup_grouped)):
     duplen.append(len(dup_grouped[i][1]))
-set(duplen)  # {?}
+set(duplen)  # {2, 3}
 
 
 
-np_dup = nep[nep.duplicated(subset=['PublicationID'], keep=False)]
-ID = 350, 1734
+for i, tup in enumerate(dup_grouped):
+    if len(tup[1]) == 2:
+        df = tup[1]
+        df.set_index(pd.Series(range(0,len(df))), inplace=True)
+        path0 = 'data/np/npTexts/np_' + str(df['ID'][0]) + '.txt'
+        path1 = 'data/np/npTexts/np_' + str(df['ID'][1]) + '.txt'
+        with open(path0, 'r', encoding='utf-8') as fp:
+            text0 = fp.read()
+        with open(path1, 'r', encoding='utf-8') as fp:
+            text1 = fp.read()      
+        if text0 == text1:
+            df['textSame'][0] = 'Yes'
 
+# Convert list to dataframe
+frames = [dg[1] for dg in dup_grouped]
+dup_df = pd.concat(frames)
+dup_df.to_csv('data/np/np_duplicates2.csv', sep=',', encoding='utf-8',
+              columns = ['ID', 'textSame', 'textLen', 
+                         
+                         'RandomizationTreatmentControl',
+                         'RandomizationTreatmentControlMethod',
+                         'RandomizationModelSham',
+                         'RandomizationModelShamMethod',
+                         'AllocationConcealment',
+                         'AllocationConcealmentMethod',
+                         'BlindedOutcomeAssessment',
+                         'BlindedOutcomeAssessmentMethod',
+                         'SampleSizeCalculation',
+                         'SampleSizeCalculationMethod',
+                         'Comorbidity',
+                         'AnimalWelfareRegulations',
+                         'ConflictsOfInterest',
+                         'AnimalExclusions',
+                         'TypeofDisease',
+                         'Project',                         
+                         'fileLink','fileLinkNew', 'DocumentLink', 'fileLink'])
+
+# Remove duplicate records 
+ID_inv2 = [# duplicates with same labels
+              1351,1736,762,1371,1597,
+              424,1315,651,1414,1033,1153,
+              # duplicates with different labels
+              826,1044,662,1666,1587,
+              1589,1575,1737,1720,1036,
+              847,1689,439,1695,1485,
+              1739,1322,1738,124,883,
+              330,544,191,1542,1286,
+              1287,626,1734]
+
+NP = NP[-NP["ID"].isin(ID_inv2)]
+
+#%% Check long and short texts (not from csv file)
+# Read correct texts from txt files, not csv!
+print(max(NP['textLen']))
+print(min(NP['textLen']))
+
+ID_inv3 = []
+for i, row in NP.iterrows():   
+    if (row['textLen'] > 100000) or (row['textLen'] < 9000):
+        ID_inv3.append(row['ID'])
+print('IDs of txts with too long or short texts:\n')
+print(ID_inv3)
+
+temp = NP[NP["ID"].isin(ID_inv3)]
+temp = temp[['ID', 'textLen', 'DocumentLink']]
+
+# Records with IDs need to be removed (manually checked, see 'np_issues.xlsx')
+ID_inv3 = [512,745,914,522,1581,
+           429,1554,1553,1038,1067,
+           649,1610,922,377,1325]
+NP = NP[-NP["ID"].isin(ID_inv3)]
+# Re-index
+NP.set_index(pd.Series(range(0, len(NP))), inplace=True)
+
+
+# Recalculate text length
+for i, row in NP.iterrows():   
+    txt_path = 'data/np/npTexts/np_' + str(row['ID']) + '.txt'
+    with open(txt_path, 'r', encoding='utf-8') as fp:
+        text = fp.read()
+    NP.loc[i,'textLen'] = len(text)
+
+                
+                
 
 
 #%% Output data
-np_final.to_csv('rob_np_fulltext.txt', sep='\t', encoding='utf-8')
+dat = NP[['DocumentLink', 'ID', 'textLen',
+                    
+         'RandomizationTreatmentControl',
+         'RandomizationTreatmentControlMethod',
+         'RandomizationModelSham',
+         'RandomizationModelShamMethod',
+         'AllocationConcealment',
+         'AllocationConcealmentMethod',
+         'BlindedOutcomeAssessment',
+         'BlindedOutcomeAssessmentMethod',
+         'SampleSizeCalculation',
+         'SampleSizeCalculationMethod',
+         'Comorbidity',
+         'AnimalWelfareRegulations',
+         'ConflictsOfInterest',
+         'AnimalExclusions',
+         
+         'TypeofDisease',
+         'Project',
+         'fileLink',
+         'fileExist',
+         'copyFlag',
+         'fileLinkNew'
+         ]]
 
 
 
+dat.to_csv('rob_np.txt', sep='\t', encoding='utf-8')
+dat.to_csv('rob_np.csv', sep=',', encoding='utf-8')
 
 
+NP.to_csv('NP.txt', sep='\t', encoding='utf-8')
+NP = pd.read_csv("data/np/NP.txt", sep='\t', encoding="utf-8")
+max(NP['textLen'])
 
 
 #%% Run regex
